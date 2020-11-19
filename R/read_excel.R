@@ -16,12 +16,10 @@
 #' ad <- read_excel("spreadsheet.xls")
 #' }
 read_excel <- function(filename, sheet, dtype = "float32") {
-  python_anndata <- reticulate::import("anndata")
-  ad <- AnnData()
-  ad$.__enclos_env__$private$.anndata <- python_anndata$read_excel(
+  python_anndata <- reticulate::import("anndata", convert = FALSE)
+  py_to_r(python_anndata$read_excel(
     filename = filename,
     sheet = sheet,
     dtype = dtype
-  )
-  ad
+  ))
 }
