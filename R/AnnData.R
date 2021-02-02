@@ -158,6 +158,15 @@ AnnData <- function(
   )
 }
 
+#' @importFrom methods as
+.check_matrix <- function(X) {
+  if (is(X, "sparseMatrix") && !is(X, "dgCMatrix") && !is(X, "dgRMatrix")) {
+    X <- as(X, "CsparseMatrix")
+  }
+
+  X
+}
+
 #' @rdname AnnData
 #'
 #' @importFrom R6 R6Class
@@ -184,7 +193,7 @@ AnnDataR6 <- R6::R6Class(
     #' @param filemode Open mode of backing file. See [h5py.File](https://docs.h5py.org/en/latest/high/file.html#h5py.File).
     #' @param raw Store raw version of `X` and `var` as `$raw$X` and `$raw$var`.
     #' @param obsp Pairwise annotation of observations, a mutable mapping with array-like values.
-    #' @param varp Pairwise annotation of observations, a mutable mapping with array-like values.
+    #' @param varp Pairwise annotation of variables, a mutable mapping with array-like values.
     #'
     #' @examples
     #' \dontrun{
@@ -211,13 +220,12 @@ AnnDataR6 <- R6::R6Class(
       obsp = NULL,
       varp = NULL
     ) {
-      if (dtype != "DUMMY") {
+      if (!identical(dtype, "DUMMY")) {
         if (!is.null(rownames(X)) && is.null(rownames(obs))) {
           if (is.null(obs)) {
             obs <- list(obs_names = rownames(X))
           } else {
             obs$obs_names <- rownames(X)
-            # rownames(obs) <- rownames(X)
           }
         }
         if (!is.null(colnames(X)) && is.null(rownames(var))) {
@@ -225,7 +233,14 @@ AnnDataR6 <- R6::R6Class(
             var <- list(var_names = colnames(X))
           } else {
             var$var_names <- colnames(X)
-            # rownames(var) <- colnames(X)
+          }
+        }
+
+        # cast matrices if necessary
+        X <- .check_matrix(X)
+        if (!is.null(layers)) {
+          for (i in seq_along(layers)) {
+            layers[[i]] <- .check_matrix(layers[[i]])
           }
         }
 
@@ -664,8 +679,13 @@ AnnDataR6 <- R6::R6Class(
     #' @field X Data matrix of shape `n_obs` × `n_vars`.
     X = function(value) {
       if (missing(value)) {
-        py_to_r(private$.anndata$X)
+        out <- py_to_r(private$.anndata$X)
+        if (!is.null(out)) {
+          dimnames(out) <- dimnames(self)
+        }
+        out
       } else {
+        value <- .check_matrix(value)
         private$.anndata$X <- value
         self
       }
@@ -723,6 +743,11 @@ AnnDataR6 <- R6::R6Class(
         py_to_r(private$.anndata$layers)
       } else {
         # add check for value
+        if (!is.null(value) && is.list(value)) {
+          for (i in seq_along(value)) {
+            value[[i]] <- .check_matrix(value[[i]])
+          }
+        }
         private$.anndata$layers <- reticulate::r_to_py(value)
         self
       }
@@ -752,8 +777,11 @@ AnnDataR6 <- R6::R6Class(
       if (missing(value)) {
         py_to_r(private$.anndata$obs)
       } else {
-        # add check for value
-        private$.anndata$obs <- value
+        if (is.null(value)) {
+          py_del_attr(private$.anndata, "obs")
+        } else {
+          private$.anndata$obs <- value
+        }
         self
       }
     },
@@ -764,6 +792,7 @@ AnnDataR6 <- R6::R6Class(
       } else {
         # add check for value
         private$.anndata$obs_names <- value
+        private$.anndata$obs_names$name <- attr(value, "name")
         self
       }
     },
@@ -791,17 +820,20 @@ AnnDataR6 <- R6::R6Class(
         self
       }
     },
-    #' @field n_var Number of variables.
-    n_var = function() {
-      py_to_r(private$.anndata$n_var)
+    #' @field n_vars Number of variables.
+    n_vars = function() {
+      py_to_r(private$.anndata$n_vars)
     },
     #' @field var One-dimensional annotation of variables (data.frame).
     var = function(value) {
       if (missing(value)) {
         py_to_r(private$.anndata$var)
       } else {
-        # add check for value
-        private$.anndata$var <- value
+        if (is.null(value)) {
+          py_del_attr(private$.anndata, "var")
+        } else {
+          private$.anndata$var <- value
+        }
         self
       }
     },
@@ -812,12 +844,13 @@ AnnDataR6 <- R6::R6Class(
       } else {
         # add check for value
         private$.anndata$var_names <- value
+        private$.anndata$var_names$name <- attr(value, "name")
         self
       }
     },
     #' @field varm Multi-dimensional annotation of variables (matrix).
     #'
-    #' Stores for each key a two or higher-dimensional matrix with `n_var` rows.
+    #' Stores for each key a two or higher-dimensional matrix with `n_vars` rows.
     varm = function(value) {
       if (missing(value)) {
         py_to_r(private$.anndata$varm)
@@ -829,7 +862,7 @@ AnnDataR6 <- R6::R6Class(
     },
     #' @field varp Pairwise annotation of variables, a mutable mapping with array-like values.
     #'
-    #' Stores for each key a two or higher-dimensional matrix whose first two dimensions are of length `n_var`.
+    #' Stores for each key a two or higher-dimensional matrix whose first two dimensions are of length `n_vars`.
     varp = function(value) {
       if (missing(value)) {
         py_to_r(private$.anndata$varp)
@@ -848,8 +881,11 @@ AnnDataR6 <- R6::R6Class(
       if (missing(value)) {
         py_to_r(private$.anndata$uns)
       } else {
-        # add check for value
-        private$.anndata$uns <- value
+        if (is.null(value)) {
+          py_del_attr(private$.anndata, "uns")
+        } else {
+          private$.anndata$uns <- value
+        }
         self
       }
     },
@@ -886,7 +922,7 @@ AnnDataR6 <- R6::R6Class(
           # reticulate::py_del_attr(private$.anndata, "raw")
           reticulate::py_del_attr(r_to_py(private$.anndata), "raw")
         } else {
-          if (is(value, "AnnDataR")) {
+          if (is(value, "AnnDataR6") || is(value, "RawR6")) {
             value <- r_to_py(value)
           }
           private$.anndata$raw <- value
@@ -902,7 +938,6 @@ AnnDataR6 <- R6::R6Class(
 #'
 #' @param x An AnnData object.
 #' @param layer An AnnData layer. If `NULL`, will use `ad$X`, otherwise `ad$layers[layer]`.
-#' @param value Replacement value.
 #' @param convert Not used.
 #' @param row.names Not used.
 #' @param optional Not used.
@@ -990,24 +1025,33 @@ py_to_r.anndata._core.anndata.AnnData <- function(x) {
   ad
 }
 
-#' @rdname AnnDataHelpers
-#' @export
-`[.AnnDataR6` <- function(x, ..., layer = NULL) {
-  as.matrix.AnnDataR6(x, layer = layer)[...]
+.process_index <- function(idx, len) {
+  if (missing(idx)) {
+    builtins <- reticulate::import_builtins(convert = FALSE)
+    idx <- builtins$slice(builtins$None)
+  } else if (is.numeric(idx)) {
+    if (any(idx <= 0)) {
+      if (!all(idx < 0)) {
+        stop("integer indices should be all positive or all negative")
+      }
+      idx <- seq_len(len)[idx]
+    }
+    idx <- as.integer(idx - 1)
+  }
+
+  idx
 }
 
 #' @rdname AnnDataHelpers
+#' @importFrom reticulate tuple
+#' @param oidx Observation indices
+#' @param vidx Variable indices
 #' @export
-`[<-.AnnDataR6` <-  function(x, ..., layer = NULL, value) {
-  mat <- as.matrix(x, layer = layer)
-  mat[...] <- value
-  dimnames(mat) <- NULL
-  if (is.null(layer)) {
-    x$X <- mat
-  } else {
-    x$layers[layer] <- mat
-  }
-  x
+`[.AnnDataR6` <- function(x, oidx, vidx) {
+  oidx <- .process_index(oidx, nrow(x))
+  vidx <- .process_index(vidx, ncol(x))
+  tup <- reticulate::tuple(oidx, vidx)
+  py_to_r(x$.__enclos_env__$private$.anndata$`__getitem__`(tup))
 }
 
 #' @rdname AnnDataHelpers
@@ -1020,10 +1064,8 @@ t.AnnDataR6 <- function(x) {
 # https://github.com/theislab/anndata/blob/58886f09b2e387c6389a2de20ed0bc7d20d1b843/anndata/tests/helpers.py#L352
 #' Test if two AnnDataR6 objects are equal
 #' @inheritParams base::all.equal
-#' @param exact Whether comparisons should be exact or not. This has a somewhat flexible
-#'   meaning and should probably get refined in the future.
 #' @export
-all.equal.AnnDataR6 <- function(target, current, exact = TRUE) {
+all.equal.AnnDataR6 <- function(target, current) {
   a <- target
   b <- current
 
@@ -1058,13 +1100,7 @@ all.equal.AnnDataR6 <- function(target, current, exact = TRUE) {
 
   match <-
     aecheck(a$obs_names, b$obs_names, "obs_names") %&%
-    aecheck(a$var_names, b$var_names, "var_names")
-
-  if (isTRUE(match) && !exact) {
-    # TODO: implement not exact.. but what does it do?
-  }
-
-  match <- match %&%
+    aecheck(a$var_names, b$var_names, "var_names") %&%
     aecheck(a$obs, b$obs, "obs") %&%
     aecheck(a$var, b$var, "var") %&%
     aecheck(a$X, b$X, "X") %&%
