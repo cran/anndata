@@ -1,7 +1,7 @@
 Type: Package
 Package: anndata
 Title: 'anndata' for R
-Version: 0.7.5.3
+Version: 0.7.5.4
 Authors@R: 
     c(person(given = "Philipp",
              family = "Angerer",
@@ -36,11 +36,11 @@ Depends: R (>= 3.5.0)
 Imports: assertthat, Matrix, methods, R6, reticulate (>= 1.17)
 Suggests: stats, testthat, knitr, rmarkdown
 Encoding: UTF-8
-RoxygenNote: 7.1.1
+RoxygenNote: 7.2.1
 Config/reticulate: list( packages = list( list(package = "anndata") ) )
 VignetteBuilder: knitr
 NeedsCompilation: no
-Packaged: 2021-09-10 08:47:32 UTC; rcannood
+Packaged: 2022-08-23 21:15:22 UTC; rcannood
 Author: Philipp Angerer [ccp] (<https://orcid.org/0000-0002-0369-2888>,
     flying-sheep),
   Alex Wolf [ccp] (<https://orcid.org/0000-0002-8760-7838>, falexwolf),
@@ -50,4 +50,4 @@ Author: Philipp Angerer [ccp] (<https://orcid.org/0000-0002-0369-2888>,
     (<https://orcid.org/0000-0003-3641-729X>, rcannood)
 Maintainer: Robrecht Cannoodt <rcannood@gmail.com>
 Repository: CRAN
-Date/Publication: 2021-09-10 09:30:02 UTC
+Date/Publication: 2022-08-23 21:40:02 UTC
