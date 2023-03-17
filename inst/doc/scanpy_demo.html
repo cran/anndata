@@ -160,18 +160,13 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>url <span class="ot">&lt;-</span> <span class="st">&quot;https://cf.10xgenomics.com/samples/cell-exp/6.0.0/SC3_v3_NextGem_DI_CellPlex_CSP_DTC_Sorted_30K_Squamous_Cell_Carcinoma/SC3_v3_NextGem_DI_CellPlex_CSP_DTC_Sorted_30K_Squamous_Cell_Carcinoma_count_sample_feature_bc_matrix.h5&quot;</span></span>
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>ad <span class="ot">&lt;-</span> sc<span class="sc">$</span><span class="fu">read_10x_h5</span>(<span class="st">&quot;dataset.h5&quot;</span>, <span class="at">backup_url =</span> url)</span>
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>ad</span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; AnnData object with n_obs × n_vars = 5377 × 36601</span></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     var: &#39;gene_ids&#39;, &#39;feature_types&#39;, &#39;genome&#39;</span></span></code></pre></div>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>ad</span></code></pre></div>
 </div>
 <div id="preprocessing-dataset" class="section level2">
 <h2>Preprocessing dataset</h2>
 <p>The resuling dataset is a wrapper for the Python class but behaves very much like an R object:</p>
 <div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>ad[<span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>, <span class="dv">3</span><span class="sc">:</span><span class="dv">5</span>]</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; View of AnnData object with n_obs × n_vars = 5 × 3</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     var: &#39;gene_ids&#39;, &#39;feature_types&#39;, &#39;genome&#39;</span></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(ad)</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1]  5377 36601</span></span></code></pre></div>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(ad)</span></code></pre></div>
 <p>But you can still call scanpy functions on it, for example to perform preprocessing.</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>sc<span class="sc">$</span>pp<span class="sc">$</span><span class="fu">filter_cells</span>(ad, <span class="at">min_genes =</span> <span class="dv">200</span>)</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>sc<span class="sc">$</span>pp<span class="sc">$</span><span class="fu">filter_genes</span>(ad, <span class="at">min_cells =</span> <span class="dv">3</span>)</span>
@@ -182,13 +177,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <h2>Analysing your dataset in R</h2>
 <p>You can seamlessly switch back to using your dataset with other R functions, for example by calculating the rowMeans of the expression matrix.</p>
 <div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(Matrix)</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">rowMeans</span>(ad<span class="sc">$</span>X[<span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>, ])</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; AAACCCAAGCGCGTTC-1 AAACCCAAGGCAATGC-1 AAACCCAGTATCTTCT-1 AAACCCAGTGACAACG-1 </span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;         0.05451418         0.13627126         0.12637224         0.13958617 </span></span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; AAACCCAGTTGAATCC-1 AAACCCATCGGCTTGG-1 AAACGAAAGAGAGCCT-1 AAACGAAAGCTTAAGA-1 </span></span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;         0.05979424         0.11365747         0.05011727         0.14347849 </span></span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; AAACGAAAGGCACGAT-1 AAACGAAAGGTAGCCA-1 </span></span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;         0.12979302         0.12366312</span></span></code></pre></div>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">rowMeans</span>(ad<span class="sc">$</span>X[<span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>, ])</span></code></pre></div>
 </div>
 
 
