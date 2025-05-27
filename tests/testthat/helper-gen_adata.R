@@ -4,7 +4,11 @@ gen_vstr_recarray <- function(m, n, dtype = NULL) {
   let <- c(letters, LETTERS)
   gen_word <- function(l) paste(sample(let, l, replace = TRUE), collapse = "")
   colnam <- sapply(seq_len(n), function(i) gen_word(5))
-  arr <- matrix(sapply(lengths, gen_word), nrow = m, dimnames = list(NULL, colnam))
+  arr <- matrix(
+    sapply(lengths, gen_word),
+    nrow = m,
+    dimnames = list(NULL, colnam)
+  )
   df <- as.data.frame(arr)
   pd <- reticulate::import("pandas", convert = FALSE)
   df <- pd$DataFrame(arr, columns = colnam)
@@ -45,8 +49,10 @@ gen_adata <- function(
   obs <- gen_typed_df(M, obs_names)
   var <- gen_typed_df(N, var_names)
   # for #147
-  obs$obs_cat <- obs$cat; obs$cat <- NULL
-  var$var_cat <- var$cat; var$cat <- NULL
+  obs$obs_cat <- obs$cat
+  obs$cat <- NULL
+  var$var_cat <- var$cat
+  var$cat <- NULL
 
   obsm <- list(
     array = matrix(runif(M * 50), nrow = M),
@@ -83,12 +89,15 @@ gen_adata <- function(
     sparse = Matrix::rsparsematrix(N, N, density = 0.1)
   )
   uns <- list(
-    O_recarray = gen_vstr_recarray(N, 5)#,
+    O_recarray = gen_vstr_recarray(N, 5) # ,
     # U_recarray=gen_vstr_recarray(N, 5, "U4")
   )
 
   ad <- AnnData(
-    X = Matrix::Matrix(matrix(rbinom(M * N, 100, 0.005), nrow = M), sparse = TRUE),
+    X = Matrix::Matrix(
+      matrix(rbinom(M * N, 100, 0.005), nrow = M),
+      sparse = TRUE
+    ),
     obs = obs,
     var = var,
     obsm = obsm,

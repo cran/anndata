@@ -1,6 +1,10 @@
 context("testing concat()")
 
+skip_on_cran()
 skip_if_no_anndata()
+
+warnings <- reticulate::import("warnings")
+warnings$filterwarnings("ignore")
 
 a <- AnnData(
   X = matrix(c(0, 1, 2, 3), nrow = 2, byrow = TRUE),
@@ -88,5 +92,4 @@ test_that("simple concat", {
   # concat(list(a, b, c), uns_merge = "unique")$uns
   # concat(list(a, b, c), uns_merge = "first")$uns
   # concat(list(a, b, c), uns_merge = "only")$uns
-
 })

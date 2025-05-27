@@ -105,8 +105,29 @@ ad$layers["spliced"]
 
 ad$uns["b"]
 
-ad[,c("var1", "var2")]
+ad[, c("var1", "var2")]
 ad[-1, , drop = FALSE]
 ad[, 2] <- 10
 }
+}
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://anndata.dynverse.org}
+  \item \url{https://github.com/dynverse/anndata}
+  \item Report bugs at \url{https://github.com/dynverse/anndata/issues}
+}
+
+}
+\author{
+\strong{Maintainer}: Robrecht Cannoodt \email{rcannood@gmail.com} (\href{https://orcid.org/0000-0003-3641-729X}{ORCID}) [copyright holder]
+
+Other contributors:
+\itemize{
+  \item Philipp Angerer \email{phil.angerer@gmail.com} (\href{https://orcid.org/0000-0002-0369-2888}{ORCID}) [conceptor]
+  \item Alex Wolf \email{f.alex.wolf@gmx.de} (\href{https://orcid.org/0000-0002-8760-7838}{ORCID}) [conceptor]
+  \item Isaac Virshup (\href{https://orcid.org/0000-0002-1710-8945}{ORCID}) [conceptor]
+  \item Sergei Rybakov (\href{https://orcid.org/0000-0002-4944-6586}{ORCID}) [conceptor]
+}
+
 }

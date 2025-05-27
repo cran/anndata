@@ -16,10 +16,10 @@
 #'
 #' @name anndata-package
 #' @aliases anndata-package anndata
-#' @docType package
 #'
 #' @importFrom reticulate py_module_available import import_builtins r_to_py py_to_r py_del_item py_del_attr py_get_item py_set_item tuple
 #' @importFrom assertthat assert_that
+#' @importFrom Matrix as.matrix
 #'
 #' @section Creating an AnnData object:
 #'
@@ -91,8 +91,8 @@
 #'
 #' ad$uns["b"]
 #'
-#' ad[,c("var1", "var2")]
+#' ad[, c("var1", "var2")]
 #' ad[-1, , drop = FALSE]
 #' ad[, 2] <- 10
 #' }
-NULL
+"_PACKAGE"

@@ -1,14 +1,18 @@
 context("testing the base functionality")
 
+skip_on_cran()
 skip_if_no_anndata()
+
+warnings <- reticulate::import("warnings")
+warnings$filterwarnings("ignore")
 
 # some test objects that we use below
 adata_dense <- AnnData(rbind(c(1, 2), c(3, 4)))
 adata_dense$layers["test"] <- adata_dense$X
 adata_sparse <- AnnData(
   Matrix::Matrix(c(0, 2, 3, 0, 5, 6), byrow = TRUE, nrow = 2, sparse = TRUE),
-  list(obs_names=c("s1", "s2"), anno1=c("c1", "c2")),
-  list(var_names=c("a", "b", "c"))
+  list(obs_names = c("s1", "s2"), anno1 = c("c1", "c2")),
+  list(var_names = c("a", "b", "c"))
 )
 
 test_that("test creation", {
@@ -28,9 +32,12 @@ test_that("test creation", {
   expect_equal(adata$raw$X, X)
   expect_equal(adata$raw$var_names, c("a", "b", "c"))
 
-  expect_error({
-    AnnData(rbind(c(1, 2), c(3, 4)), list(TooLong = c(1, 2, 3, 4)))
-  }, regexp = "ValueError: (Shape of passed values|Length of values)")
+  expect_error(
+    {
+      AnnData(rbind(c(1, 2), c(3, 4)), list(TooLong = c(1, 2, 3, 4)))
+    },
+    regexp = "ValueError: (Shape of passed values|Length of values)"
+  )
 
   # init with empty data matrix
   shape <- c(3, 5)
@@ -63,7 +70,11 @@ test_that("create from sparse", {
   df <- s
   dimnames(df) <- list(obs_names, var_names)
   a <- AnnData(df)
-  b <- AnnData(s, obs = data.frame(row.names = obs_names), var = data.frame(row.names = var_names))
+  b <- AnnData(
+    s,
+    obs = data.frame(row.names = obs_names),
+    var = data.frame(row.names = var_names)
+  )
   expect_equal(a, b)
   expect_is(a$X, "sparseMatrix")
 })
@@ -104,7 +115,7 @@ test_that("from df and dict", {
 test_that("attr deletion", {
   full <- gen_adata(c(30, 30))
   # Empty has just X, obs_names, var_names
-  #empty <- AnnData(full$X, obs = full$obs[,integer(0)], var = full$var[,integer(0)])
+  # empty <- AnnData(full$X, obs = full$obs[,integer(0)], var = full$var[,integer(0)])
   # TODO: allow passing empty data frames??
   empty <- AnnData(full$X)
   empty$obs_names <- full$obs_names
@@ -242,7 +253,9 @@ test_that("setting dim index for var", {
 test_that("indices dtypes", {
   adata <- AnnData(
     matrix(
-      1:6, nrow = 2, byrow = TRUE,
+      1:6,
+      nrow = 2,
+      byrow = TRUE,
       dimnames = list(
         c("A", "B"),
         c("a", "b", "c")
@@ -254,7 +267,12 @@ test_that("indices dtypes", {
 })
 
 test_that("slicing", {
-  orig <- matrix(1:6, nrow = 2, byrow = TRUE, dimnames = list(c("0", "1"), c("0", "1", "2")))
+  orig <- matrix(
+    1:6,
+    nrow = 2,
+    byrow = TRUE,
+    dimnames = list(c("0", "1"), c("0", "1", "2"))
+  )
   adata <- AnnData(orig)
 
   expect_equal(adata[1, 1]$X, orig[1, 1, drop = FALSE])
@@ -275,13 +293,24 @@ test_that("slicing", {
 })
 
 test_that("boolean_slicing", {
-  orig <- matrix(1:6, nrow = 2, byrow = TRUE, dimnames = list(c("0", "1"), c("0", "1", "2")))
+  orig <- matrix(
+    1:6,
+    nrow = 2,
+    byrow = TRUE,
+    dimnames = list(c("0", "1"), c("0", "1", "2"))
+  )
   adata <- AnnData(orig)
 
   obs_selector <- c(TRUE, FALSE)
   vars_selector <- c(TRUE, FALSE, FALSE)
-  expect_equal(adata[obs_selector, ][, vars_selector]$X, orig[1, 1, drop = FALSE])
-  expect_equal(adata[, vars_selector][obs_selector, ]$X, orig[1, 1, drop = FALSE])
+  expect_equal(
+    adata[obs_selector, ][, vars_selector]$X,
+    orig[1, 1, drop = FALSE]
+  )
+  expect_equal(
+    adata[, vars_selector][obs_selector, ]$X,
+    orig[1, 1, drop = FALSE]
+  )
   expect_equal(adata[obs_selector, ][, 1]$X, orig[1, 1, drop = FALSE])
   expect_equal(adata[, 1][obs_selector, ]$X, orig[1, 1, drop = FALSE])
   expect_equal(adata[1, ][, vars_selector]$X, orig[1, 1, drop = FALSE])
@@ -289,8 +318,14 @@ test_that("boolean_slicing", {
 
   obs_selector <- c(TRUE, FALSE)
   vars_selector <- c(TRUE, TRUE, FALSE)
-  expect_equal(adata[obs_selector, ][, vars_selector]$X, orig[1, 1:2, drop = FALSE])
-  expect_equal(adata[, vars_selector][obs_selector, ]$X, orig[1, 1:2, drop = FALSE])
+  expect_equal(
+    adata[obs_selector, ][, vars_selector]$X,
+    orig[1, 1:2, drop = FALSE]
+  )
+  expect_equal(
+    adata[, vars_selector][obs_selector, ]$X,
+    orig[1, 1:2, drop = FALSE]
+  )
   expect_equal(adata[obs_selector, ][, 1:2]$X, orig[1, 1:2, drop = FALSE])
   expect_equal(adata[, 1:2][obs_selector, ]$X, orig[1, 1:2, drop = FALSE])
   expect_equal(adata[1, ][, vars_selector]$X, orig[1, 1:2, drop = FALSE])
@@ -298,8 +333,14 @@ test_that("boolean_slicing", {
 
   obs_selector <- c(TRUE, TRUE)
   vars_selector <- c(TRUE, TRUE, FALSE)
-  expect_equal(adata[obs_selector, ][, vars_selector]$X, orig[, 1:2, drop = FALSE])
-  expect_equal(adata[, vars_selector][obs_selector, ]$X, orig[, 1:2, drop = FALSE])
+  expect_equal(
+    adata[obs_selector, ][, vars_selector]$X,
+    orig[, 1:2, drop = FALSE]
+  )
+  expect_equal(
+    adata[, vars_selector][obs_selector, ]$X,
+    orig[, 1:2, drop = FALSE]
+  )
   expect_equal(adata[obs_selector, ][, 1:2]$X, orig[, 1:2, drop = FALSE])
   expect_equal(adata[, 1:2][obs_selector, ]$X, orig[, 1:2, drop = FALSE])
   expect_equal(adata[1:2, ][, vars_selector]$X, orig[, 1:2, drop = FALSE])
@@ -307,22 +348,34 @@ test_that("boolean_slicing", {
 })
 
 test_that("oob boolean slicing", {
+  skip_if(tolower(Sys.info()[["sysname"]]) == "darwin") # skip on macOS
   len <- sample.int(50, 2, replace = FALSE)
-  expect_error({
-    empty_mat <- matrix(rep(0, len[[1]] * 100), nrow = len[[1]])
-    sel <- sample(c(TRUE, FALSE), len[[2]], replace = TRUE)
-    AnnData(empty_mat)[sel, ]
-  }, regexp = "does not match.*shape along this dimension")
+  expect_error(
+    {
+      empty_mat <- matrix(rep(0, len[[1]] * 100), nrow = len[[1]])
+      sel <- sample(c(TRUE, FALSE), len[[2]], replace = TRUE)
+      AnnData(empty_mat)[sel, ]
+    },
+    regexp = "does not match.*shape along this dimension"
+  )
 
-  expect_error({
-    empty_mat <- matrix(rep(0, len[[1]] * 100), nrow = len[[1]])
-    sel <- sample(c(TRUE, FALSE), len[[2]], replace = TRUE)
-    AnnData(empty_mat)[, sel]
-  }, regexp = "does not match.*shape along this dimension")
+  expect_error(
+    {
+      empty_mat <- matrix(rep(0, len[[1]] * 100), nrow = len[[1]])
+      sel <- sample(c(TRUE, FALSE), len[[2]], replace = TRUE)
+      AnnData(empty_mat)[, sel]
+    },
+    regexp = "does not match.*shape along this dimension"
+  )
 })
 
 test_that("slicing strings", {
-  orig <- matrix(1:6, byrow = TRUE, nrow = 2, dimnames = list(c("A", "B"), c("a", "b", "c")))
+  orig <- matrix(
+    1:6,
+    byrow = TRUE,
+    nrow = 2,
+    dimnames = list(c("A", "B"), c("a", "b", "c"))
+  )
   adata <- AnnData(orig)
 
   expect_equal(adata["A", "a"]$X, orig[1, 1, drop = FALSE])

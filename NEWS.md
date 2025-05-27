@@ -1,6 +1,18 @@
-# anndata 0.7.5.6
+# anndata 0.8.0
 
-* BUG FIX: Use the right interface for the `all.equal()` function.
+* FUNCTIONALITY: Added support for `read_zarr()` and `write_zarr()` (PR #33).
+
+* BUG FIX: Use the right interface for the `all.equal()` function (PR #32).
+
+* BUG FIX: Add `py_to_r` converter for `anndata.abc._AbstractCSDataset` (PR #34).
+
+* MINOR CHANGES: Ignore python warnings when running tests (PR #34).
+
+* MAJOR CHANGES: Update reticulate package dependency management (PR #36).
+
+* MINOR CHANGES: Clean up roxygen code (PR #36).
+
+* MINOR CHANGES: Use cli for generating errors (PR #36).
 
 # anndata 0.7.5.5
 

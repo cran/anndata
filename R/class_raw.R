@@ -167,7 +167,7 @@ RawR6 <- R6::R6Class(
   active = list(
     #' @field X Data matrix of shape `n_obs` × `n_vars`.
     X = function() {
-        py_to_r_ifneedbe(private$.raw$X)
+      py_to_r_ifneedbe(private$.raw$X)
     },
     #' @field n_obs Number of observations.
     n_obs = function() {
@@ -209,6 +209,7 @@ RawR6 <- R6::R6Class(
 #' @param ... Parameters passed to the underlying function.
 #'
 #' @rdname RawHelpers
+#' @method dimnames RawR6
 #' @export
 #'
 #' @examples
@@ -238,9 +239,9 @@ RawR6 <- R6::R6Class(
 #' dimnames(ad$raw)
 #' dim(ad$raw)
 #' as.matrix(ad$raw)
-#' ad$raw[2,,drop=FALSE]
-#' ad$raw[,-1]
-#' ad$raw[,c("var1", "var2")]
+#' ad$raw[2, , drop = FALSE]
+#' ad$raw[, -1]
+#' ad$raw[, c("var1", "var2")]
 #' }
 dimnames.RawR6 <- function(x) {
   list(
@@ -250,12 +251,14 @@ dimnames.RawR6 <- function(x) {
 }
 
 #' @rdname RawHelpers
+#' @method dim RawR6
 #' @export
 dim.RawR6 <- function(x) {
   x$shape
 }
 
 #' @rdname RawHelpers
+#' @method as.matrix RawR6
 #' @export
 as.matrix.RawR6 <- function(x, ...) {
   mat <- x$X
@@ -264,25 +267,29 @@ as.matrix.RawR6 <- function(x, ...) {
 }
 
 #' @rdname RawHelpers
+#' @method r_to_py RawR6
 #' @export
 r_to_py.RawR6 <- function(x, convert = FALSE) {
   x$.get_py_object()
 }
 
 #' @rdname RawHelpers
+#' @method py_to_r anndata._core.raw.Raw
 #' @export
 py_to_r.anndata._core.raw.Raw <- function(x) {
   RawR6$new(x)
 }
 
 #' @rdname RawHelpers
+#' @method [ RawR6
 #' @export
 `[.RawR6` <- function(x, ...) {
   as.matrix.RawR6(x)[...]
 }
 
 #' @rdname all.equal
-#' @export
+#' @method all.equal RawR6
+#' @exportS3Method all.equal RawR6
 all.equal.RawR6 <- function(target, current, ...) {
   a <- target
   b <- current

@@ -106,7 +106,7 @@
 #'   uns = list(a = 1, b = 2, c = list(c.a = 3, c.b = 4))
 #' )
 #'
-#' value <- matrix(c(1,2,3,4), nrow = 2)
+#' value <- matrix(c(1, 2, 3, 4), nrow = 2)
 #' ad$X <- value
 #' ad$X
 #'
@@ -144,13 +144,21 @@ AnnData <- function(
   nrow <- nrow(X)
   if (is.null(nrow)) nrow <- nrow(obs)
   if (is.null(nrow) && !is.null(shape)) nrow <- shape[[1]]
-  assert_that(!is.null(nrow), msg = "If $X, $obs and $var are NULL, shape should be set to the dimensions of the AnnData.")
+  if (is.null(nrow)) {
+    cli::cli_abort(
+      "If $X, $obs and $var are NULL, shape should be set to the dimensions of the AnnData."
+    )
+  }
 
   # check ncol size
   ncol <- ncol(X)
   if (is.null(ncol)) ncol <- nrow(var)
   if (is.null(ncol) && !is.null(shape)) ncol <- shape[[2]]
-  assert_that(!is.null(ncol), msg = "If $X, $obs and $var are NULL, shape should be set to the dimensions of the AnnData.")
+  if (is.null(ncol)) {
+    cli::cli_abort(
+      "If $X, $obs and $var are NULL, shape should be set to the dimensions of the AnnData."
+    )
+  }
 
   # check for obs names
   obs_names <- rownames(X)
@@ -161,7 +169,6 @@ AnnData <- function(
   var_names <- colnames(X)
   if (is.null(var_names)) var_names <- rownames(var)
   if (is.null(var_names)) var_names <- as.character(seq_len(ncol))
-
 
   if (is.null(rownames(obs))) {
     if (is.null(obs)) {
@@ -216,7 +223,11 @@ AnnData <- function(
 
 #' @importFrom methods as
 .check_matrix <- function(X) {
-  if (inherits(X, "sparseMatrix") && !inherits(X, "CsparseMatrix") && !inherits(X, "RsparseMatrix")) {
+  if (
+    inherits(X, "sparseMatrix") &&
+      !inherits(X, "CsparseMatrix") &&
+      !inherits(X, "RsparseMatrix")
+  ) {
     X <- as(X, "CsparseMatrix")
   }
 
@@ -392,9 +403,11 @@ AnnDataR6 <- R6::R6Class(
     #' ad$chunk_X(select = 1:3) # first 3 samples
     #' }
     chunk_X = function(select = 1000L, replace = TRUE) {
-      py_to_r_ifneedbe(private$.anndata$chunk_X(select = select, replace = replace))
+      py_to_r_ifneedbe(private$.anndata$chunk_X(
+        select = select,
+        replace = replace
+      ))
     },
-
 
     #' @description Return an iterator over the rows of the data matrix X.
     #'
@@ -412,11 +425,14 @@ AnnDataR6 <- R6::R6Class(
       private$.anndata$chunked_X(chunk_size = chunk_size)
     },
 
-    #' @description Concatenate along the observations axis.
+    #' @description
+    #' `r lifecycle::badge('deprecated')`
+    #'
+    #' Use [concat()] instead.
     #'
     #' @param ... Deprecated
     concatenate = function(...) {
-      stop("Deprecated! Use concat(ad1, ad2) instead.")
+      cli::cli_abort("Deprecated! Use `concat(ad1, ad2)` instead.")
     },
 
     #' @description Full copy, optionally on disk.
@@ -453,7 +469,10 @@ AnnDataR6 <- R6::R6Class(
     #' ad$rename_categories("group", c(a = "A", b = "B")) # ??
     #' }
     rename_categories = function(key, categories) {
-      py_to_r_ifneedbe(private$.anndata$rename_categories(key = key, categories = categories))
+      py_to_r_ifneedbe(private$.anndata$rename_categories(
+        key = key,
+        categories = categories
+      ))
     },
 
     #' @description Transform string annotations to categoricals.
@@ -553,11 +572,11 @@ AnnDataR6 <- R6::R6Class(
     #' }
     write_csvs = function(dirname, skip_data = TRUE, sep = ",") {
       dirname <- normalizePath(dirname, mustWork = FALSE)
-      private$.anndata$write_csvs(
+      invisible(py_to_r_ifneedbe(private$.anndata$write_csvs(
         dirname = dirname,
         skip_data = skip_data,
         sep = sep
-      )
+      )))
     },
 
     #' @description Write .h5ad-formatted hdf5 file.
@@ -565,7 +584,6 @@ AnnDataR6 <- R6::R6Class(
     #' Generally, if you have sparse data that are stored as a dense matrix, you can
     #' dramatically improve performance and reduce disk space by converting to a csr_matrix:
     #'
-    #' @param anndata An [AnnData()] object
     #' @param filename Filename of data file. Defaults to backing file.
     #' @param compression See the h5py [filter pipeline](http://docs.h5py.org/en/latest/high/dataset.html#dataset-compression).
     #'   Options are `"gzip"`, `"lzf"` or `NULL`.
@@ -590,19 +608,23 @@ AnnDataR6 <- R6::R6Class(
     #'
     #' file.remove("output.h5ad")
     #' }
-    write_h5ad = function(filename, compression = NULL, compression_opts = NULL, as_dense = list()) {
+    write_h5ad = function(
+      filename,
+      compression = NULL,
+      compression_opts = NULL,
+      as_dense = list()
+    ) {
       filename <- normalizePath(filename, mustWork = FALSE)
-      private$.anndata$write_h5ad(
+      invisible(py_to_r_ifneedbe(private$.anndata$write_h5ad(
         filename = filename,
         compression = compression,
         compression_opts = compression_opts,
         as_dense = as_dense
-      )
+      )))
     },
 
     #' @description Write .loom-formatted hdf5 file.
     #'
-    #' @param anndata An [AnnData()] object
     #' @param filename The filename.
     #' @param write_obsm_varm Whether or not to also write the varm and obsm.
     #'
@@ -626,10 +648,23 @@ AnnDataR6 <- R6::R6Class(
     #' }
     write_loom = function(filename, write_obsm_varm = FALSE) {
       filename <- normalizePath(filename, mustWork = FALSE)
-      private$.anndata$write_loom(
+      invisible(py_to_r_ifneedbe(private$.anndata$write_loom(
         filename = filename,
         write_obsm_varm = write_obsm_varm
-      )
+      )))
+    },
+
+    #' @description Write a hierarchical Zarr array store.
+    #' @param store The filename, a MutableMapping, or a Zarr storage class.
+    #' @param chunks Chunk size.
+    write_zarr = function(store, chunks = NULL) {
+      if (is.character(store)) {
+        store <- normalizePath(store, mustWork = FALSE)
+      }
+      invisible(py_to_r_ifneedbe(private$.anndata$write_zarr(
+        store = store,
+        chunks = chunks
+      )))
     },
 
     #' @description Print AnnData object
@@ -949,6 +984,7 @@ AnnDataR6 <- R6::R6Class(
 #'   positive length of the appropriate dimension of `ad`.
 #'
 #' @rdname AnnDataHelpers
+#' @method dimnames AnnDataR6
 #' @export
 #'
 #' @examples
@@ -980,9 +1016,9 @@ AnnDataR6 <- R6::R6Class(
 #' as.data.frame(ad, layer = "unspliced")
 #' as.matrix(ad)
 #' as.matrix(ad, layer = "unspliced")
-#' ad[2,,drop=FALSE]
-#' ad[,-1]
-#' ad[,c("var1", "var2")]
+#' ad[2, , drop = FALSE]
+#' ad[, -1]
+#' ad[, c("var1", "var2")]
 #' }
 dimnames.AnnDataR6 <- function(x) {
   list(
@@ -992,33 +1028,46 @@ dimnames.AnnDataR6 <- function(x) {
 }
 
 #' @rdname AnnDataHelpers
+#' @method dimnames<- AnnDataR6
 #' @export
 `dimnames<-.AnnDataR6` <- function(x, value) {
   d <- dim(x)
-  if (!is.list(value) || length(value) != 2L)
-    stop("invalid 'dimnames' given for AnnData")
-  # value[[1L]] <- as.character(value[[1L]])
-  # value[[2L]] <- as.character(value[[2L]])
-  if (d[[1L]] != length(value[[1L]]) || d[[2L]] != length(value[[2L]]))
-    stop("invalid 'dimnames' given for AnnData")
+  if (!is.list(value) || length(value) != 2L) {
+    cli::cli_abort("invalid 'dimnames' given for AnnData")
+  }
+  if (d[[1L]] != length(value[[1L]]) || d[[2L]] != length(value[[2L]])) {
+    cli::cli_abort(paste0(
+      "invalid 'dimnames' given for AnnData: ",
+      "{d[[1L]]} x {d[[2L]]} != {length(value[[1L]])} x {length(value[[2L]])}"
+    ))
+  }
   x$obs_names <- value[[1L]]
   x$var_names <- value[[2L]]
   x
 }
 
 #' @rdname AnnDataHelpers
+#' @method dim AnnDataR6
 #' @export
 dim.AnnDataR6 <- function(x) {
   x$shape
 }
 
 #' @rdname AnnDataHelpers
+#' @method as.data.frame AnnDataR6
 #' @export
-as.data.frame.AnnDataR6 <- function(x, row.names = NULL, optional = FALSE, layer = NULL, ...) {
+as.data.frame.AnnDataR6 <- function(
+  x,
+  row.names = NULL,
+  optional = FALSE,
+  layer = NULL,
+  ...
+) {
   x$to_df(layer = layer)
 }
 
 #' @rdname AnnDataHelpers
+#' @method as.matrix AnnDataR6
 #' @export
 as.matrix.AnnDataR6 <- function(x, layer = NULL, ...) {
   mat <-
@@ -1032,12 +1081,14 @@ as.matrix.AnnDataR6 <- function(x, layer = NULL, ...) {
 }
 
 #' @rdname AnnDataHelpers
+#' @method r_to_py AnnDataR6
 #' @export
 r_to_py.AnnDataR6 <- function(x, convert = FALSE) {
   x$.get_py_object()
 }
 
 #' @rdname AnnDataHelpers
+#' @method py_to_r anndata._core.anndata.AnnData
 #' @export
 py_to_r.anndata._core.anndata.AnnData <- function(x) {
   AnnDataR6$new(x)
@@ -1050,7 +1101,7 @@ py_to_r.anndata._core.anndata.AnnData <- function(x) {
   } else if (is.numeric(idx)) {
     if (any(idx <= 0)) {
       if (!all(idx < 0)) {
-        stop("integer indices should be all positive or all negative")
+        cli::cli_abort("integer indices should be all positive or all negative")
       }
       idx <- seq_len(len)[idx]
     }
@@ -1064,6 +1115,7 @@ py_to_r.anndata._core.anndata.AnnData <- function(x) {
 #' @importFrom reticulate tuple
 #' @param oidx Observation indices
 #' @param vidx Variable indices
+#' @method [ AnnDataR6
 #' @export
 `[.AnnDataR6` <- function(x, oidx, vidx) {
   oidx <- .process_index(oidx, nrow(x))
@@ -1073,6 +1125,7 @@ py_to_r.anndata._core.anndata.AnnData <- function(x) {
 }
 
 #' @rdname AnnDataHelpers
+#' @method t AnnDataR6
 #' @export
 t.AnnDataR6 <- function(x) {
   x$`T`
@@ -1083,7 +1136,8 @@ t.AnnDataR6 <- function(x) {
 #' Test if two objects objects are equal
 #' @rdname all.equal
 #' @inheritParams base::all.equal
-#' @export
+#' @method all.equal AnnDataR6
+#' @exportS3Method all.equal AnnDataR6
 all.equal.AnnDataR6 <- function(target, current, ...) {
   a <- target
   b <- current
@@ -1138,12 +1192,14 @@ all.equal.AnnDataR6 <- function(target, current, ...) {
 }
 
 #' @rdname AnnDataHelpers
+#' @method py_to_r anndata._core.sparse_dataset.SparseDataset
 #' @export
 py_to_r.anndata._core.sparse_dataset.SparseDataset <- function(x) {
   py_to_r_ifneedbe(x$value)
 }
 
 #' @rdname AnnDataHelpers
+#' @method py_to_r h5py._hl.dataset.Dataset
 #' @export
 py_to_r.h5py._hl.dataset.Dataset <- function(x) {
   py_to_r(py_get_item(x, tuple()))

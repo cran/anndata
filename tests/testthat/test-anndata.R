@@ -1,6 +1,10 @@
 context("testing AnnData")
 
+skip_on_cran()
 skip_if_no_anndata()
+
+warnings <- reticulate::import("warnings")
+warnings$filterwarnings("ignore")
 
 ad <- AnnData(
   X = matrix(0:5, nrow = 2),
@@ -61,12 +65,17 @@ test_that("test common R functions", {
 
   expect_true(all(as.matrix(ad, layer = "unspliced") == 8:13))
 
-  expect_true(all(as.data.frame(ad) == list(var1 = 1:2, var2 = 3:4, var3 = 5:6)))
+  expect_true(all(
+    as.data.frame(ad) == list(var1 = 1:2, var2 = 3:4, var3 = 5:6)
+  ))
 
-  expect_true(all(as.data.frame(ad, layer = "unspliced") == list(var1 = 8:9, var2 = 10:11, var3 = 12:13)))
+  expect_true(all(
+    as.data.frame(ad, layer = "unspliced") ==
+      list(var1 = 8:9, var2 = 10:11, var3 = 12:13)
+  ))
 
-  expect_equal(ad$X[,1], c(s1 = 1, s2 = 2))
-  expect_equal(ad$X[1,], c(var1 = 1, var2 = 3, var3 = 5))
+  expect_equal(ad$X[, 1], c(s1 = 1, s2 = 2))
+  expect_equal(ad$X[1, ], c(var1 = 1, var2 = 3, var3 = 5))
 })
 
 test_that("anndata works with sparse data", {
@@ -74,7 +83,10 @@ test_that("anndata works with sparse data", {
   ad <- AnnData(
     X = sp,
     obs = data.frame(group = c("a", "b"), row.names = c("s1", "s2")),
-    var = data.frame(type = c(1L, 2L, 3L), row.names = c("var1", "var2", "var3")),
+    var = data.frame(
+      type = c(1L, 2L, 3L),
+      row.names = c("var1", "var2", "var3")
+    ),
     layers = list(
       spliced = matrix(4:9, nrow = 2) %>% as("RsparseMatrix"),
       unspliced = matrix(8:13, nrow = 2)
@@ -95,7 +107,6 @@ test_that("uns python objects get converted", {
 
   expect_is(b, "data.frame")
   expect_true(all(c("f", "z", "a") %in% colnames(ad$uns$b)))
-
 
   ad$uns$b <- list(a = data.frame(f = 1), b = 2)
 })
